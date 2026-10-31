@@ -4,7 +4,7 @@ from tg_msg_checker.pipeline import AnalysisEngine
 
 
 def test_parallel_matches_inline(tmp_path):
-    settings = Settings(workers=2, phone_region="UA", coord_crs="sk42")
+    settings = Settings(workers=2, coord_crs="sk42")
     engine = AnalysisEngine(tmp_path, settings)
     engine.create_dictionary("Зброя", "uk", "weapon", ["граната"])
     engine.start_pool()

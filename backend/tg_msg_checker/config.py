@@ -7,7 +7,6 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class Settings:
     workers: int
-    phone_region: str
     coord_crs: str
 
     @classmethod
@@ -18,8 +17,7 @@ class Settings:
             workers = min(4, cpu)
         else:
             workers = int(raw_workers)
-        region = os.environ.get("PHONE_REGION", "UA").strip().upper() or "UA"
         crs = os.environ.get("COORD_CRS", "sk42").strip().lower()
         if crs not in {"sk42", "usk2000"}:
             raise ValueError("COORD_CRS має бути sk42 або usk2000")
-        return cls(workers=max(0, workers), phone_region=region, coord_crs=crs)
+        return cls(workers=max(0, workers), coord_crs=crs)

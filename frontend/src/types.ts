@@ -17,13 +17,6 @@ export type TagMatch = {
   end: number
 }
 
-export type PhoneMatch = {
-  text: string
-  normalized: string
-  start: number
-  end: number
-}
-
 export type CoordinateMatch = {
   text: string
   format: string
@@ -40,7 +33,7 @@ export type TagGroup = {
 
 export type EntityGroup = {
   type: string
-  matches: Array<PhoneMatch | CoordinateMatch>
+  matches: CoordinateMatch[]
 }
 
 export type AnalysisItem = {

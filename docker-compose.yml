@@ -6,7 +6,6 @@ services:
     environment:
       PYTHONUTF8: "1"
       PYTHONIOENCODING: utf-8
-      PHONE_REGION: ${PHONE_REGION:-UA}
       COORD_CRS: ${COORD_CRS:-sk42}
       WORKERS: ${WORKERS:-2}
     volumes:

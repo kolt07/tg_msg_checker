@@ -17,6 +17,10 @@ _GK_RE = re.compile(
     rf"(?<![\w])(?P<l1>{_GK_LABEL})\s*[=:]\s*(?P<n1>{_GK_NUMBER})"
     rf"{_GK_GAP}(?P<l2>{_GK_LABEL})\s*[=:]\s*(?P<n2>{_GK_NUMBER})(?!\d)"
 )
+# Без підписів: перше число — X (північ), друге — Y (схід із зоною).
+_GK_BARE_RE = re.compile(
+    rf"(?<![\w])(?P<n1>{_GK_NUMBER})\s*,\s*(?P<n2>{_GK_NUMBER})(?!\d)"
+)
 
 _DEG = r"[°º]"
 _MIN = r"['\u2032\u2019]"
@@ -173,6 +177,7 @@ class CoordinateAnalyzer:
             return []
         found: list[Finding] = []
         found.extend(self._gauss_kruger(text))
+        found.extend(self._bare_gauss_kruger(text))
         found.extend(self._angular(text, _DMS_RE, "dms", with_seconds=True))
         found.extend(self._angular(text, _DDM_RE, "ddm", with_seconds=False))
         found.extend(self._labeled_decimal(text))
@@ -209,6 +214,22 @@ class CoordinateAnalyzer:
             elif first_axis == "y" and second_axis == "x":
                 easting, northing = first, second
             else:
+                continue
+            converted = _project_gk(northing, easting, self.crs)
+            if converted is None:
+                continue
+            lat, lon = converted
+            hit = self._hit(text, match.start(), match.end(), "gauss_kruger", lat, lon)
+            if hit is not None:
+                found.append(hit)
+        return found
+
+    def _bare_gauss_kruger(self, text: str) -> list[Finding]:
+        found: list[Finding] = []
+        for match in _GK_BARE_RE.finditer(text):
+            northing = _parse_float(match.group("n1"))
+            easting = _parse_float(match.group("n2"))
+            if northing is None or easting is None:
                 continue
             converted = _project_gk(northing, easting, self.crs)
             if converted is None:

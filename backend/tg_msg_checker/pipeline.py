@@ -7,7 +7,6 @@ from pathlib import Path
 
 from tg_msg_checker.analyzers.coordinates import CoordinateAnalyzer
 from tg_msg_checker.analyzers.lexical import LexicalAnalyzer
-from tg_msg_checker.analyzers.phones import PhoneAnalyzer
 from tg_msg_checker.config import Settings
 from tg_msg_checker.dictionaries import DictionaryNotFound, DictionaryStore, validate_dictionary
 from tg_msg_checker.lemmatize import build_form_index
@@ -23,11 +22,10 @@ class Cascade:
         self.analyzers = analyzers
 
     @classmethod
-    def from_forms(cls, forms: dict, phone_region: str, coord_crs: str) -> Cascade:
+    def from_forms(cls, forms: dict, coord_crs: str) -> Cascade:
         return cls(
             [
                 LexicalAnalyzer(forms),
-                PhoneAnalyzer(phone_region),
                 CoordinateAnalyzer(coord_crs),
             ]
         )
@@ -110,7 +108,6 @@ class AnalysisEngine:
                 analyze_chunk,
                 str(snapshot),
                 chunk,
-                self.settings.phone_region,
                 self.settings.coord_crs,
             )
             for chunk in chunks
@@ -130,7 +127,7 @@ class AnalysisEngine:
 
     def _commit(self, entries: list[Dictionary]) -> None:
         forms, stats = build_form_index(entries)
-        cascade = Cascade.from_forms(forms, self.settings.phone_region, self.settings.coord_crs)
+        cascade = Cascade.from_forms(forms, self.settings.coord_crs)
         version = self._version + 1
         snapshot = self.data_dir / f"index-{version}.pkl"
         _write_pickle(snapshot, {"version": version, "forms": forms})
@@ -150,7 +147,7 @@ class AnalysisEngine:
 
     def _install(self, entries: list[Dictionary]) -> Cascade:
         forms, stats = build_form_index(entries)
-        cascade = Cascade.from_forms(forms, self.settings.phone_region, self.settings.coord_crs)
+        cascade = Cascade.from_forms(forms, self.settings.coord_crs)
         version = self._version + 1
         snapshot = self.data_dir / f"index-{version}.pkl"
         _write_pickle(snapshot, {"version": version, "forms": forms})
@@ -210,13 +207,6 @@ def group_findings(message_id: str, findings: list[Finding]) -> dict | None:
 
 
 def _entity_match(finding: Finding) -> dict:
-    if finding.name == "phone":
-        return {
-            "text": finding.text,
-            "normalized": finding.payload.get("normalized", ""),
-            "start": finding.start,
-            "end": finding.end,
-        }
     if finding.name == "coordinates":
         return {
             "text": finding.text,
@@ -231,21 +221,20 @@ def _entity_match(finding: Finding) -> dict:
     return payload
 
 
-def analyze_chunk(snapshot_path: str, pairs: list[tuple[str, str]], phone_region: str, coord_crs: str) -> list[dict]:
-    cascade = _load_worker_cascade(snapshot_path, phone_region, coord_crs)
+def analyze_chunk(snapshot_path: str, pairs: list[tuple[str, str]], coord_crs: str) -> list[dict]:
+    cascade = _load_worker_cascade(snapshot_path, coord_crs)
     messages = [Message(message_id, text) for message_id, text in pairs]
     return cascade.analyze_many(messages)
 
 
-def _load_worker_cascade(snapshot_path: str, phone_region: str, coord_crs: str) -> Cascade:
-    key = (phone_region, coord_crs)
-    if _worker_cache["path"] == snapshot_path and _worker_cache["key"] == key:
+def _load_worker_cascade(snapshot_path: str, coord_crs: str) -> Cascade:
+    if _worker_cache["path"] == snapshot_path and _worker_cache["key"] == coord_crs:
         return _worker_cache["cascade"]  # type: ignore[return-value]
     with open(snapshot_path, "rb") as handle:
         data = pickle.load(handle)
-    cascade = Cascade.from_forms(data["forms"], phone_region, coord_crs)
+    cascade = Cascade.from_forms(data["forms"], coord_crs)
     _worker_cache["path"] = snapshot_path
-    _worker_cache["key"] = key
+    _worker_cache["key"] = coord_crs
     _worker_cache["cascade"] = cascade
     return cascade
 

@@ -37,12 +37,28 @@ def test_gauss_kruger_variants_and_usk2000():
     assert usk["lon"] == pytest.approx(sk42["lon"], abs=0.01)
 
 
-def test_gauss_kruger_rejects_invalid_and_bare_numbers():
+def test_bare_gauss_kruger_comma_pair_when_it_projects():
+    found = CoordinateAnalyzer().analyze("точка 5158697, 6485198 кінець")
+    assert len(found) == 1
+    assert found[0].text == "5158697, 6485198"
+    assert found[0].payload["format"] == "gauss_kruger"
+    assert found[0].payload["lat"] == pytest.approx(46.562, abs=0.01)
+    assert found[0].payload["lon"] == pytest.approx(32.805, abs=0.01)
+
+    compact = CoordinateAnalyzer().analyze("5158697,6485198")
+    assert compact[0].text == "5158697,6485198"
+    spaced = CoordinateAnalyzer().analyze("5 158 697, 6 485 198")
+    assert spaced[0].payload["lat"] == pytest.approx(found[0].payload["lat"], abs=1e-4)
+
+
+def test_gauss_kruger_rejects_invalid_and_unseparated_numbers():
     analyzer = CoordinateAnalyzer()
     assert analyzer.analyze("5179365 6500127") == []
     assert analyzer.analyze("X = 20000000 Y = 6500127") == []
     assert analyzer.analyze("X = 5179365 Y = 6900000") == []
     assert analyzer.analyze("X = 5179365") == []
+    assert analyzer.analyze("5158697, 100") == []
+    assert analyzer.analyze("20000000, 6485198") == []
 
 
 def test_decimal_dms_and_ddm():

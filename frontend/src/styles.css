@@ -191,6 +191,10 @@ button.danger { color: #8d2b2b; }
 
 .results { display: flex; flex-direction: column; gap: 12px; }
 
+.export { margin-top: 16px; }
+
+.export pre { margin: 8px 0 0; }
+
 .result {
   border-top: 1px solid #e4daca;
   padding-top: 12px;
@@ -205,7 +209,6 @@ mark {
 }
 
 mark.tag { background: #f0d7a4; }
-mark.phone { background: #c9dff6; }
 mark.coordinates { background: #cfe3c8; }
 mark.mixed { background: #e4d4f0; }
 
@@ -224,7 +227,6 @@ mark.mixed { background: #e4d4f0; }
   align-items: baseline;
 }
 
-.pill.phone { background: #c9dff6; }
 .pill.coordinates { background: #cfe3c8; }
 
 pre {

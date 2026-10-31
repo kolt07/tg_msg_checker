@@ -27,7 +27,7 @@ def test_analyze_returns_only_hits_and_elapsed_header(tmp_path, monkeypatch):
                 "messages": [
                     {
                         "id": "1",
-                        "text": "бачив гранату, тел. +380501234567, X = 5179365 Y = 6500127",
+                        "text": "бачив гранату, X = 5179365 Y = 6500127",
                     },
                     {"id": "2", "text": "тихий день без згадок"},
                     {"id": 3, "text": "ще гранату"},
@@ -41,9 +41,7 @@ def test_analyze_returns_only_hits_and_elapsed_header(tmp_path, monkeypatch):
         assert [item["id"] for item in payload] == ["1", "3"]
         assert payload[0]["tags"][0]["tag"] == "weapon"
         kinds = {entity["type"] for entity in payload[0]["entities"]}
-        assert kinds == {"phone", "coordinates"}
-        phone = next(entity for entity in payload[0]["entities"] if entity["type"] == "phone")
-        assert phone["matches"][0]["normalized"] == "+380501234567"
+        assert kinds == {"coordinates"}
         coordinates = next(entity for entity in payload[0]["entities"] if entity["type"] == "coordinates")
         assert coordinates["matches"][0]["format"] == "gauss_kruger"
         assert "entities" not in payload[1]

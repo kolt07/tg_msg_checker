@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { analyzeMessages } from "../api"
-import type { AnalysisItem, CoordinateMatch, EntityGroup, InputMessage, PhoneMatch, TagGroup } from "../types"
+import type { AnalysisItem, CoordinateMatch, EntityGroup, InputMessage, TagGroup } from "../types"
 
 type Mode = "text" | "json" | "lines"
 
@@ -13,14 +13,13 @@ type Span = {
 
 export function TestBench() {
   const [mode, setMode] = useState<Mode>("text")
-  const [raw, setRaw] = useState(
-    "Побачив гранату біля X = 5179365 Y = 6500127, тел. 050 123 45 67",
-  )
+  const [raw, setRaw] = useState("Побачив гранату біля X = 5179365 Y = 6500127")
   const [error, setError] = useState("")
   const [running, setRunning] = useState(false)
   const [elapsedMs, setElapsedMs] = useState<number | null>(null)
   const [submitted, setSubmitted] = useState(0)
   const [results, setResults] = useState<AnalysisItem[] | null>(null)
+  const [copied, setCopied] = useState(false)
 
   async function onFile(file: File | undefined) {
     if (!file) return
@@ -47,6 +46,7 @@ export function TestBench() {
     try {
       const response = await analyzeMessages(messages)
       setResults(response.results)
+      setCopied(false)
       setElapsedMs(response.elapsedMs)
       setSubmitted(messages.length)
     } catch (reason: unknown) {
@@ -86,8 +86,8 @@ export function TestBench() {
           </button>
         </div>
         <p className="hint">
-          JSON: масив {`[{ "id", "text" }]`} або об’єкт з полем messages. У текстовому файлі один рядок — одне
-          повідомлення, id дорівнює номеру рядка.
+          JSON: масив або об’єкт з полем messages. У текстовому файлі один рядок — одне повідомлення, id дорівнює
+          номеру рядка.
         </p>
         {error ? <p className="error">{error}</p> : null}
       </section>
@@ -114,10 +114,23 @@ export function TestBench() {
               </article>
             ))}
           </div>
-          <details>
-            <summary>JSON відповіді</summary>
-            <pre className="mono">{JSON.stringify(results, null, 2)}</pre>
-          </details>
+        </section>
+      ) : null}
+      {results ? (
+        <section className="panel">
+          <div className="row spread">
+            <h2>Вивантаження</h2>
+            <div className="row">
+              <button type="button" className="ghost" onClick={() => downloadFindings(results)}>
+                Завантажити
+              </button>
+              <button type="button" className="ghost" onClick={() => void copyFindings(results, setCopied)}>
+                {copied ? "Скопійовано" : "Копіювати"}
+              </button>
+            </div>
+          </div>
+          <p className="hint">Лише теги і сутності знайдених повідомлень.</p>
+          <pre className="mono">{JSON.stringify(results, null, 2)}</pre>
         </section>
       ) : null}
     </div>
@@ -143,10 +156,32 @@ function parseInput(mode: Mode, raw: string): InputMessage[] {
   if (!list) throw new Error("Очікується масив повідомлень або об’єкт з полем messages")
   return list.map((item, index) => {
     if (!item || typeof item !== "object") throw new Error(`Елемент ${index + 1} не є об’єктом`)
-    const record = item as { id?: unknown; text?: unknown }
+    const record = item as Record<string, unknown>
     if (typeof record.text !== "string") throw new Error(`У елемента ${index + 1} немає текстового поля text`)
-    return { id: record.id === undefined ? String(index + 1) : String(record.id), text: record.text }
+    return {
+      id: record.id === undefined ? String(index + 1) : String(record.id),
+      text: record.text,
+    }
   })
+}
+
+function findingsJson(results: AnalysisItem[]): string {
+  return JSON.stringify(results, null, 2)
+}
+
+function downloadFindings(results: AnalysisItem[]) {
+  const blob = new Blob([findingsJson(results)], { type: "application/json;charset=utf-8" })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  link.href = url
+  link.download = "findings.json"
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+async function copyFindings(results: AnalysisItem[], setCopied: (value: boolean) => void) {
+  await navigator.clipboard.writeText(findingsJson(results))
+  setCopied(true)
 }
 
 function textOf(item: AnalysisItem, raw: string, mode: Mode): string {
@@ -190,17 +225,11 @@ function collectSpans(item: AnalysisItem): Span[] {
         start: match.start,
         end: match.end,
         kind: entity.type,
-        label: entityLabel(entity, match),
+        label: `координати ${match.lat}, ${match.lon}`,
       })
     }
   }
   return spans
-}
-
-function entityLabel(entity: EntityGroup, match: PhoneMatch | CoordinateMatch): string {
-  if (entity.type === "phone" && "normalized" in match) return `телефон ${match.normalized}`
-  if ("lat" in match) return `координати ${match.lat}, ${match.lon}`
-  return entity.type
 }
 
 function segments(text: string, spans: Span[]) {
@@ -255,22 +284,19 @@ function EntityLine({ entity }: { entity: EntityGroup }) {
     <li>
       <span className={`pill ${entity.type}`}>{entityTitle(entity.type)}</span>
       {entity.matches.map((match, index) => (
-        <span key={`${match.start}-${index}`}>{formatEntity(entity.type, match)}</span>
+        <span key={`${match.start}-${index}`}>{formatEntity(match)}</span>
       ))}
     </li>
   )
 }
 
 function entityTitle(type: string): string {
-  if (type === "phone") return "телефон"
   if (type === "coordinates") return "координати"
   return type
 }
 
-function formatEntity(type: string, match: PhoneMatch | CoordinateMatch): string {
-  if (type === "phone" && "normalized" in match) return `${match.text} → ${match.normalized}`
-  if ("lat" in match && "format" in match) return `${match.text} → ${match.lat}, ${match.lon} (${match.format})`
-  return match.text
+function formatEntity(match: CoordinateMatch): string {
+  return `${match.text} → ${match.lat}, ${match.lon} (${match.format})`
 }
 
 function formatMs(value: number | null): string {
