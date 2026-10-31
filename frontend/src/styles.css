@@ -1,0 +1,241 @@
+:root {
+  color: #1c1915;
+  background: #f3efe6;
+  font-family: "Segoe UI", sans-serif;
+  line-height: 1.45;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+}
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+.app {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 28px 20px 64px;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: end;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  color: #6d6458;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+h1, h2 { margin: 0; font-weight: 650; }
+
+h1 { font-size: 32px; }
+
+nav {
+  display: flex;
+  gap: 8px;
+}
+
+nav a {
+  text-decoration: none;
+  color: #1c1915;
+  border: 1px solid #d9d0c3;
+  background: #fffdf8;
+  border-radius: 999px;
+  padding: 8px 14px;
+}
+
+nav a.active {
+  background: #1f6b4a;
+  color: #f7f4ee;
+  border-color: #1f6b4a;
+}
+
+.split, .bench {
+  display: grid;
+  gap: 16px;
+}
+
+.split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+
+.panel {
+  background: #fffdf8;
+  border: 1px solid #e4daca;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+label, .file {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.inline {
+  flex-direction: row;
+  align-items: center;
+  margin-top: 0;
+}
+
+input, select, textarea {
+  width: 100%;
+  border: 1px solid #d9d0c3;
+  background: #fff;
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+textarea { resize: vertical; }
+
+.mono, pre {
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 14px;
+}
+
+.hint { color: #6d6458; font-size: 14px; }
+.error { color: #8d2b2b; }
+.status { color: #1f6b4a; }
+
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.row.spread { justify-content: space-between; }
+
+button, .file input {
+  border: 0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: #1f6b4a;
+  color: #f7f4ee;
+  cursor: pointer;
+}
+
+button:disabled { opacity: 0.6; cursor: wait; }
+
+button.ghost, .file {
+  background: transparent;
+  color: #1c1915;
+  border: 1px solid #d9d0c3;
+}
+
+button.danger { color: #8d2b2b; }
+
+.cards {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid #e4daca;
+  border-radius: 12px;
+  padding: 8px;
+}
+
+.card.selected { border-color: #1f6b4a; }
+
+.card-main {
+  background: transparent;
+  color: inherit;
+  border: 0;
+  text-align: left;
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.tag, .pill {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 1px 8px;
+  background: #f0d7a4;
+  font-size: 13px;
+}
+
+.meta, .id { color: #6d6458; font-size: 13px; }
+
+.stats {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  font-weight: 650;
+}
+
+.results { display: flex; flex-direction: column; gap: 12px; }
+
+.result {
+  border-top: 1px solid #e4daca;
+  padding-top: 12px;
+}
+
+.message { font-size: 18px; white-space: pre-wrap; }
+
+mark {
+  padding: 0 2px;
+  border-radius: 4px;
+  color: inherit;
+}
+
+mark.tag { background: #f0d7a4; }
+mark.phone { background: #c9dff6; }
+mark.coordinates { background: #cfe3c8; }
+mark.mixed { background: #e4d4f0; }
+
+.matches {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.matches li {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+
+.pill.phone { background: #c9dff6; }
+.pill.coordinates { background: #cfe3c8; }
+
+pre {
+  overflow: auto;
+  background: #f6f1e8;
+  padding: 12px;
+  border-radius: 10px;
+}
+
+@media (max-width: 800px) {
+  .split { grid-template-columns: 1fr; }
+  .top { flex-direction: column; align-items: stretch; }
+  h1 { font-size: 28px; }
+}

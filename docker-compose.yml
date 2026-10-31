@@ -1,0 +1,36 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    init: true
+    environment:
+      PYTHONUTF8: "1"
+      PYTHONIOENCODING: utf-8
+      PHONE_REGION: ${PHONE_REGION:-UA}
+      COORD_CRS: ${COORD_CRS:-sk42}
+      WORKERS: ${WORKERS:-2}
+    volumes:
+      - ./backend/data:/app/data
+    ports:
+      - "8030:8000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/dictionaries')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "8092:80"
+    depends_on:
+      backend:
+        condition: service_healthy

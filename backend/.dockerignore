@@ -1,0 +1,7 @@
+.venv
+__pycache__
+.pytest_cache
+tests
+data/index-*.pkl
+data/*.tmp
+*.pyc
